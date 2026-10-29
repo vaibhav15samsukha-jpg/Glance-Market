@@ -1,0 +1,48 @@
+name: Update Glace Market
+
+on:
+  schedule:
+    - cron: "0 7 * * 1-5"    # 12:30 PM IST (mid-session snapshot)
+    - cron: "30 11 * * 1-5"  # 5:00 PM IST (end of day)
+  workflow_dispatch:          # lets you press "Run workflow" manually
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Build data and site
+        run: python scripts/update.py
+        env:
+          SCOPE: nifty500   # change to "all" for every NSE-listed stock (slower)
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

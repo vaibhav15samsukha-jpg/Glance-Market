@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glace Market</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2l12 7v14l-12 7-12-7V9z' fill='%232563eb'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1b2330;--mu:#6b7686;--bd:#e3e7ee;--ac:#2563eb;--up:#16a34a;--dn:#dc2626}
+@media (prefers-color-scheme:dark){:root{--bg:#0f141b;--card:#171e28;--tx:#e6eaf0;--mu:#8b97a8;--bd:#273140;--ac:#3b82f6;--up:#22c55e;--dn:#f87171}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:inherit;text-decoration:none}
+.logo{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:20px;color:var(--ac);cursor:pointer}
+.logo svg{width:28px;height:28px}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:220px;max-width:560px}
+#q{width:100%;padding:11px 16px;border:1px solid var(--bd);border-radius:24px;background:var(--bg);color:var(--tx);font-size:15px;outline:none}
+#q:focus{border-color:var(--ac)}
+#sug{position:absolute;left:0;right:0;top:48px;background:var(--card);border:1px solid var(--bd);border-radius:10px;z-index:9;display:none;overflow:hidden;box-shadow:0 8px 24px #0002}
+#sug div{padding:9px 16px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
+#sug div.on,#sug div:hover{background:var(--bg)}
+.home{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:20px;text-align:center}
+.home .logo{font-size:38px}.home .logo svg{width:50px;height:50px}
+.home .sw{width:100%;max-width:560px}
+.btn{display:inline-block;background:var(--ac);color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+.btn.o{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+main{max-width:1000px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
+h1{margin:0;font-size:24px}h2{margin:0 0 10px;font-size:17px}
+.mu{color:var(--mu)}
+.sec{display:inline-block;font-size:12px;background:var(--bg);border:1px solid var(--bd);border-radius:20px;padding:1px 10px;margin-left:6px;color:var(--mu);vertical-align:middle}
+.top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:center}
+.price{font-size:26px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:0 28px;margin-top:12px}
+.grid div{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd)}
+.btns{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+button.t{border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px}
+button.t.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.cw{position:relative;height:340px}canvas{width:100%;height:100%;display:block}
+#tip{position:absolute;top:2px;left:8px;font-size:12px;color:var(--mu);pointer-events:none}
+.ov{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px;white-space:nowrap}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--bd)}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--card)}
+th{color:var(--mu);font-weight:600}
+tr.pk{cursor:pointer}tr.pk:hover td{background:var(--bg)}tr.cur td{font-weight:600;color:var(--ac)}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.note{font-size:12px;color:var(--mu);text-align:center;padding:8px 16px 24px}
+</style></head><body>
+<div id="app"></div>
+<script>
+const LOGO='<span class="logo" onclick="location.hash=\'\'"><svg viewBox="0 0 32 32"><path d="M16 2l12 7v14l-12 7-12-7V9z" fill="#2563eb"/><path d="M11 20v-5M16 22v-9M21 18v-6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>Glace Market</span>';
+const $=s=>document.querySelector(s),app=$("#app");
+const safe=s=>s.replace(/[^A-Za-z0-9_-]/g,"_");
+const N=(x,d=2)=>x==null?"–":Number(x).toLocaleString("en-IN",{maximumFractionDigits:d});
+const J=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json()};
+let IDX,cur,rng="1Y",tab="q";
+const SEARCH='<div class="sw"><input id="q" placeholder="Search company or symbol (e.g. TCS, Reliance)" autocomplete="off"><div id="sug"></div></div>';
+const head=()=>`<header>${LOGO}${SEARCH}<a class="btn o" href="#ipo">Live IPOs</a></header>`;
+const note=()=>`<div class="note">Data via Yahoo Finance &amp; NSE free sources · updated ${IDX.u}. Not investment advice.</div>`;
+function bindSearch(){const q=$("#q"),sg=$("#sug");if(!q)return;let hit=[],ix=0;
+ const paint=()=>{sg.innerHTML=hit.map((x,i)=>`<div class="${i==ix?"on":""}" data-s="${x[0]}"><span>${x[1]}</span><span class="mu">${x[0]}</span></div>`).join("");sg.style.display=hit.length?"block":"none";
+  sg.querySelectorAll("div").forEach(d=>d.onclick=()=>go(d.dataset.s))};
+ const go=s=>{sg.style.display="none";location.hash=encodeURIComponent(s)};
+ q.oninput=()=>{const v=q.value.trim().toLowerCase();
+  hit=v?IDX.s.filter(x=>x[0].toLowerCase().includes(v)||x[1].toLowerCase().includes(v)).sort((a,b)=>(b[0].toLowerCase().startsWith(v)||b[1].toLowerCase().startsWith(v))-(a[0].toLowerCase().startsWith(v)||a[1].toLowerCase().startsWith(v))).slice(0,8):[];ix=0;paint()};
+ q.onkeydown=e=>{if(e.key=="Enter"&&hit[ix])go(hit[ix][0]);if(e.key=="ArrowDown"||e.key=="ArrowUp"){e.preventDefault();ix=(ix+(e.key=="ArrowDown"?1:-1)+hit.length)%hit.length;paint()}};
+ document.addEventListener("click",e=>{if(!e.target.closest(".sw"))sg.style.display="none"})}
+function home(){app.innerHTML=`<div class="home">${LOGO}<p class="mu" style="margin:0">Search any listed company</p>${SEARCH}<a class="btn" href="#ipo">📢 Live IPOs &amp; Premium (GMP)</a></div>${note()}`;bindSearch();$("#q").focus()}
+async function ipoView(){app.innerHTML=head()+'<main><div class="card"><h2>Live IPOs &amp; Grey Market Premium</h2><div id="ib" class="mu">Loading…</div></div></main>';bindSearch();
+ let d;try{d=await J("data/ipo.json")}catch(e){$("#ib").textContent="IPO data not available yet.";return}
+ if(!d.items.length){$("#ib").innerHTML="No live IPOs found right now. (Updated "+d.u+")";return}
+ $("#ib").innerHTML=`<div class="ov"><table><tr><th>Company</th><th>Price band ₹</th><th>Opens</th><th>Closes</th><th>Status</th><th>Subscribed (x)</th><th>GMP ₹</th><th>Est. listing ₹</th><th>Est. gain</th></tr>${d.items.map(i=>`<tr><td>${i.name}</td><td>${i.band||"–"}</td><td>${i.open||"–"}</td><td>${i.close||"–"}</td><td>${i.status||"–"}</td><td>${i.sub||"–"}</td><td>${N(i.gmp)}</td><td>${N(i.listing)}</td><td class="${i.gain>=0?"up":"dn"}">${i.gain==null?"–":N(i.gain,1)+"%"}</td></tr>`).join("")}</table></div>
+ <p class="mu" style="font-size:12px">GMP (grey market premium) is unofficial and not guaranteed. Edit config/gmp.json to update it. Updated ${d.u}.</p>`}
+// ---------- chart ----------
+const RG={"1D":{s:"i"},"5D":{s:"i"},"1M":{n:22},"6M":{n:126},"1Y":{n:252},"3Y":{n:756,w:1},"5Y":{n:1260,w:1},"Max":{n:1e5,w:1}};
+const day=t=>new Date(t*1000).toLocaleDateString("en-CA",{timeZone:"Asia/Kolkata"});
+function weekly(a){const o=[];for(let i=0;i<a.length;i+=5){const g=a.slice(i,i+5);o.push([g[0][0],g[0][1],Math.max(...g.map(x=>x[2])),Math.min(...g.map(x=>x[3])),g[g.length-1][4]])}return o}
+function series(){const R=RG[rng];let a;
+ if(R.s=="i"){a=cur.i||[];if(rng=="1D"&&a.length){const k=day(a[a.length-1][0]);a=a.filter(x=>day(x[0])==k)}}
+ else{a=cur.d.slice(-R.n);if(R.w)a=weekly(a)}return a}
+function lab(t,full){const i=RG[rng].s=="i",o=i?{timeZone:"Asia/Kolkata"}:{timeZone:"UTC"};
+ if(full)return new Date(t*1000).toLocaleString("en-IN",{...o,day:"2-digit",month:"short",year:"numeric",...(i?{hour:"2-digit",minute:"2-digit",hour12:false}:{})});
+ if(rng=="1D")return new Date(t*1000).toLocaleTimeString("en-IN",{...o,hour:"2-digit",minute:"2-digit",hour12:false});
+ if(rng=="3Y"||rng=="5Y"||rng=="Max")return new Date(t*1000).toLocaleDateString("en-IN",{...o,month:"short",year:"2-digit"});
+ return new Date(t*1000).toLocaleDateString("en-IN",{...o,day:"2-digit",month:"short"})}
+function draw(){const cv=$("#cv"),a=series(),tip=$("#tip");if(!cv)return;
+ if(a.length<2){const x=cv.getContext("2d");cv.width=cv.clientWidth;cv.height=cv.clientHeight;tip.textContent="Chart data not available for this range.";$("#chg").textContent="";return}
+ tip.textContent="";const ch=(a[a.length-1][4]/a[0][1]-1)*100;$("#chg").innerHTML=`<span class="${ch>=0?"up":"dn"}">${ch>=0?"▲":"▼"} ${N(Math.abs(ch),2)}%</span>`;
+ const dpr=devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;const x=cv.getContext("2d");x.scale(dpr,dpr);
+ const st=getComputedStyle(document.documentElement),UP=st.getPropertyValue("--up"),DN=st.getPropertyValue("--dn"),MU=st.getPropertyValue("--mu"),BD=st.getPropertyValue("--bd");
+ const mx=Math.max(...a.map(k=>k[2])),mn=Math.min(...a.map(k=>k[3])),L=6,Rm=52,T=18,B=22,pw=w-L-Rm,ph=h-T-B,y=v=>T+(mx-v)/(mx-mn||1)*ph,step=pw/a.length;
+ x.font="11px system-ui";x.textAlign="left";
+ for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,yy=y(v);x.strokeStyle=BD;x.beginPath();x.moveTo(L,yy);x.lineTo(L+pw,yy);x.stroke();x.fillStyle=MU;x.fillText(N(v,v<100?2:0),L+pw+5,yy+4)}
+ const gap=Math.max(1,Math.floor(a.length/6));
+ a.forEach((k,i)=>{const cx=L+step*(i+.5),c=k[4]>=k[1]?UP:DN;x.strokeStyle=x.fillStyle=c;x.beginPath();x.moveTo(cx,y(k[2]));x.lineTo(cx,y(k[3]));x.stroke();
+  const bw=Math.max(1,step*.7);x.fillRect(cx-bw/2,y(Math.max(k[1],k[4])),bw,Math.max(1,Math.abs(y(k[1])-y(k[4]))));
+  if(i%gap==0){x.fillStyle=MU;x.textAlign="center";x.fillText(lab(k[0]),cx,h-6)}});
+ cv._a=a;cv._g={L,step}}
+function hov(e){const cv=$("#cv"),r=cv.getBoundingClientRect(),a=cv._a&&cv._a[Math.floor((e.clientX-r.left-cv._g.L)/cv._g.step)];
+ $("#tip").textContent=a?`${lab(a[0],1)}   O ${N(a[1])}  H ${N(a[2])}  L ${N(a[3])}  C ${N(a[4])}`:""}
+// ---------- company ----------
+const tbl=(h,rows,u)=>`<div class="ov"><table><tr><th>${u}</th>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${rows.map(r=>`<tr><td>${r[0]}</td>${r[1].map(v=>`<td>${N(v)}</td>`).join("")}</tr>`).join("")}</table></div>`;
+const tabHtml=()=>{const t={q:cur.q,p:cur.p,b:cur.b,s:cur.sh}[tab];return t?tbl(t.cols,t.rows,tab=="s"?"%":"₹ Crores"):'<p class="mu">Data not available for this company.</p>'};
+async function stockView(sym){app.innerHTML=head()+'<main><div class="card mu">Loading…</div></main>'+note();bindSearch();
+ try{cur=await J("data/stocks/"+safe(sym)+".json")}catch(e){$("main").innerHTML='<div class="card">Company not found. Try searching again.</div>';return}
+ rng="1Y";tab="q";const c=cur,m=c.m;
+ const kv=[["Market Cap","₹ "+N(m.mcap,0)+" Cr"],["Current Price","₹ "+N(m.price)],["High / Low","₹ "+N(m.hi)+" / "+N(m.lo)],["Stock P/E",N(m.pe,1)],["Book Value","₹ "+N(m.bv)],["Dividend Yield",N(m.dy)+" %"],["ROCE",N(m.roce,1)+" %"],["ROE",N(m.roe,1)+" %"],["Face Value","₹ "+N(m.fv)],["Profit after tax","₹ "+N(m.pat,0)+" Cr"],["Revenue","₹ "+N(m.rev,0)+" Cr"],["Reserves","₹ "+N(m.res,0)+" Cr"]];
+ $("main").innerHTML=`<div class="card"><div class="top"><h1>${c.name}<span class="sec">${c.sector||c.industry||"NSE"}</span></h1><span class="price">₹ ${N(m.price)}</span></div>
+ <p class="mu" style="margin:8px 0 12px">${c.desc||"Description not available."}</p>
+ <a class="btn" target="_blank" rel="noopener" href="https://www.screener.in/company/${encodeURIComponent(c.sym)}/">View more details on Screener.in ↗</a>
+ <div class="grid">${kv.map(k=>`<div><span class="mu">${k[0]}</span><b>${k[1]}</b></div>`).join("")}</div></div>
+ <div class="card"><div class="top"><h2>Price chart</h2><span id="chg"></span></div><div class="btns">${Object.keys(RG).map(k=>`<button class="t${k==rng?" on":""}" data-r="${k}">${k=="Max"?"7Y":k}</button>`).join("")}</div><div class="cw"><canvas id="cv"></canvas><div id="tip"></div></div></div>
+ <div class="card"><h2>Peer comparison</h2><div class="ov"><table><tr><th>Company</th><th>CMP ₹</th><th>P/E</th><th>Mkt Cap Cr</th><th>Div Yld %</th><th>ROCE %</th><th>ROE %</th></tr>${(c.peers||[]).map((p,i)=>`<tr class="pk${i?"":" cur"}" data-s="${p[0]}"><td>${p[1]}</td><td>${N(p[2])}</td><td>${N(p[3],1)}</td><td>${N(p[4],0)}</td><td>${N(p[5])}</td><td>${N(p[6],1)}</td><td>${N(p[7],1)}</td></tr>`).join("")}</table></div></div>
+ <div class="card"><div class="btns">${[["q","Quarterly Results"],["p","Profit & Loss"],["b","Balance Sheet"],["s","Investor Shareholding"]].map(t=>`<button class="t${t[0]==tab?" on":""}" data-t="${t[0]}">${t[1]}</button>`).join("")}</div><div id="tb">${tabHtml()}</div></div>`;
+ draw();const cv=$("#cv");cv.onpointermove=hov;cv.onpointerleave=()=>{};
+ document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{rng=b.dataset.r;document.querySelectorAll("[data-r]").forEach(x=>x.classList.toggle("on",x==b));draw()});
+ document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll("[data-t]").forEach(x=>x.classList.toggle("on",x==b));$("#tb").innerHTML=tabHtml()});
+ document.querySelectorAll(".pk").forEach(r=>r.onclick=()=>{location.hash=encodeURIComponent(r.dataset.s)})}
+async function route(){const h=decodeURIComponent(location.hash.slice(1));scrollTo(0,0);
+ try{IDX=IDX||await J("data/index.json")}catch(e){app.innerHTML=head().replace(SEARCH,"")+'<main><div class="card">Data not available yet. Run the GitHub Action once (see README).</div></main>';return}
+ if(!h)return home();if(h=="ipo")return ipoView();return stockView(h)}
+addEventListener("hashchange",route);addEventListener("resize",()=>cur&&$("#cv")&&draw());route();
+</script></body></html>
