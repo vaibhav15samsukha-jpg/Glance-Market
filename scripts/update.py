@@ -162,34 +162,79 @@ def attr(tk, name):
         return None
 
 
-def build(sym, last, name, fv, industry):
-    tk = yf.Ticker(sym + ".NS")
-    info = {}
-    for a in range(3):
+INFO_OK = [0, 0]
+
+
+def get_info(tk):
+    for a in range(4):
         try:
             info = tk.info or {}
-            break
+            if info.get("marketCap") or info.get("longName") or info.get("sector"):
+                return info
         except Exception:
-            time.sleep(2 * (a + 1))
+            pass
+        time.sleep(2 * (a + 1))
+    return {}
+
+
+def latest(df, names):
+    if df is None or df.empty:
+        return None
+    return pick(df, names, sorted(df.columns)[-1])
+
+
+def build(sym, d, name, fv, industry):
+    tk = yf.Ticker(sym + ".NS")
+    info = get_info(tk)
+    INFO_OK[1] += 1
+    INFO_OK[0] += 1 if info else 0
+    fi = None
+    try:
+        fi = tk.fast_info
+    except Exception:
+        pass
+
+    def fast(*keys):
+        for k in keys:
+            try:
+                v = num(fi[k], 4)
+                if v is not None:
+                    return v
+            except Exception:
+                pass
+        return None
+
     qi, ai, bs = attr(tk, "quarterly_income_stmt"), attr(tk, "income_stmt"), attr(tk, "balance_sheet")
-    price = num(info.get("currentPrice")) or last
+    yr = d[-252:]
+    price = num(info.get("currentPrice")) or d[-1][4]
+    hi = num(info.get("fiftyTwoWeekHigh")) or max(x[2] for x in yr)
+    lo = num(info.get("fiftyTwoWeekLow")) or min(x[3] for x in yr)
+    shares = num(info.get("sharesOutstanding"), 0) or fast("shares")
+    mcap = num(info.get("marketCap"), 0) or fast("marketCap", "market_cap") or (price * shares if shares else None)
+    eq = latest(bs, ["Stockholders Equity", "Common Stock Equity"])
+    cap = latest(bs, ["Capital Stock", "Common Stock"])
+    ni = latest(ai, ["Net Income", "Net Income Common Stockholders"])
+    rv = latest(ai, ["Total Revenue", "Operating Revenue"])
+    eps = None
+    if qi is not None and not qi.empty:
+        vals = [pick(qi, ["Diluted EPS", "Basic EPS"], c) for c in sorted(qi.columns)[-4:]]
+        if len(vals) == 4 and all(v is not None for v in vals):
+            eps = sum(vals)
+    eps = eps or latest(ai, ["Diluted EPS", "Basic EPS"])
+    pe = num(info.get("trailingPE"), 1) or (round(price / eps, 1) if eps and eps > 0 else None)
+    bv = num(info.get("bookValue")) or (round(eq / shares, 1) if eq and shares else None)
+    roe = num(info.get("returnOnEquity"))
+    roe = round(roe * 100, 1) if roe is not None else (round(ni / eq * 100, 1) if ni is not None and eq else None)
+    pat = num(info.get("netIncomeToCommon")) or ni
+    rev = num(info.get("totalRevenue")) or rv
     rate = num(info.get("dividendRate"))
     # ROCE = EBIT / (Total assets - Current liabilities), latest annual year
     roce = None
-    if ai is not None and bs is not None:
-        ebit = pick(ai, ["EBIT", "Operating Income"], sorted(ai.columns)[-1])
-        ta = pick(bs, ["Total Assets"], sorted(bs.columns)[-1])
-        cl = pick(bs, ["Current Liabilities"], sorted(bs.columns)[-1])
-        if ebit is not None and ta and cl is not None and ta - cl > 0:
-            roce = round(ebit / (ta - cl) * 100, 1)
-    res = None
-    if bs is not None:
-        c = sorted(bs.columns)[-1]
-        eq, cap = pick(bs, ["Stockholders Equity", "Common Stock Equity"], c), pick(bs, ["Capital Stock", "Common Stock"], c)
-        res = cr(eq - cap) if eq is not None and cap is not None else None
-    roe = num(info.get("returnOnEquity"))
-    pat = num(info.get("netIncomeToCommon"))
-    rev = num(info.get("totalRevenue"))
+    ebit = latest(ai, ["EBIT", "Operating Income"])
+    ta, cl = latest(bs, ["Total Assets"]), latest(bs, ["Current Liabilities"])
+    if ebit is not None and ta and cl is not None and ta - cl > 0:
+        roce = round(ebit / (ta - cl) * 100, 1)
+    res = cr(eq - cap) if eq is not None and cap is not None else None
     sh = None
     mh = attr(tk, "major_holders")
     if mh is not None:
@@ -206,15 +251,16 @@ def build(sym, last, name, fv, industry):
     desc = ". ".join(desc.split(". ")[:3]).strip()
     if desc and not desc.endswith("."):
         desc += "."
+    full = info.get("longName") or name
+    sector = info.get("sector") or ""
+    if not desc:
+        desc = f"{full} is listed on the NSE" + (f" and operates in the {industry or sector} industry." if (industry or sector) else ".")
     return {
-        "sym": sym, "name": info.get("longName") or name, "sector": info.get("sector") or "",
-        "industry": industry or info.get("industry") or info.get("sector") or "Other", "desc": desc,
-        "m": {"price": price, "hi": num(info.get("fiftyTwoWeekHigh")), "lo": num(info.get("fiftyTwoWeekLow")),
-              "mcap": cr(num(info.get("marketCap"), 0)), "pe": num(info.get("trailingPE"), 1),
-              "bv": num(info.get("bookValue")),
+        "sym": sym, "name": full, "sector": sector,
+        "industry": industry or info.get("industry") or sector or "Other", "desc": desc,
+        "m": {"price": price, "hi": hi, "lo": lo, "mcap": cr(mcap), "pe": pe, "bv": bv,
               "dy": round(rate / price * 100, 2) if rate and price else None,
-              "roce": roce, "roe": round(roe * 100, 1) if roe is not None else None, "fv": fv,
-              "pat": cr(pat), "rev": cr(rev), "res": res},
+              "roce": roce, "roe": roe, "fv": fv, "pat": cr(pat), "rev": cr(rev), "res": res},
         "q": income(qi, 8), "p": income(ai, 5), "b": balance(bs), "sh": sh,
     }
 
@@ -271,7 +317,7 @@ def main():
         if len(d) < 5:
             return None
         try:
-            rec = build(sym, d[-1][4], names.get(sym, sym), fv.get(sym), ind.get(sym))
+            rec = build(sym, d, names.get(sym, sym), fv.get(sym), ind.get(sym))
         except Exception as e:
             print("skip", sym, e)
             return None
@@ -280,7 +326,7 @@ def main():
         return rec
 
     summ, index = {}, []
-    with ThreadPoolExecutor(6) as ex:
+    with ThreadPoolExecutor(3) as ex:
         for rec in ex.map(work, syms):
             if not rec:
                 continue
@@ -290,7 +336,7 @@ def main():
             summ[rec["sym"]] = [rec["sym"], rec["name"], m["price"], m["pe"], m["mcap"], m["dy"], m["roce"], m["roe"]]
             index.append([rec["sym"], rec["name"]])
             summ[rec["sym"]].append(rec["industry"])
-    print("built", len(index), "stocks")
+    print("built", len(index), "stocks; company info received for", INFO_OK[0], "of", INFO_OK[1])
 
     # peers: same industry, closest market cap
     groups = {}
