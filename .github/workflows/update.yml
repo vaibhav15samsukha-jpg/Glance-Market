@@ -31,7 +31,7 @@ jobs:
       - name: Build data and site
         run: python scripts/update.py
         env:
-          SCOPE: nifty500   # change to "all" for every NSE-listed stock (slower)
+          SCOPE: all   # change to "all" for every NSE-listed stock (slower)
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
