@@ -10,7 +10,7 @@ import pandas as pd
 import requests
 import yfinance as yf
 
-SCOPE = os.getenv("SCOPE", "nifty500").lower()
+SCOPE = os.getenv("SCOPE", "all").lower()
 LIMIT = int(os.getenv("LIMIT", "0") or 0)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, "site")
