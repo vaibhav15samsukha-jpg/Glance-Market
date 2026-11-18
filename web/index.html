@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Glace Market</title>
+<title>Glance Market</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2l12 7v14l-12 7-12-7V9z' fill='%232563eb'/%3E%3C/svg%3E">
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--tx:#1b2330;--mu:#6b7686;--bd:#e3e7ee;--ac:#2563eb;--up:#16a34a;--dn:#dc2626}
@@ -46,15 +46,50 @@ th{color:var(--mu);font-weight:600}
 tr.pk{cursor:pointer}tr.pk:hover td{background:var(--bg)}tr.cur td{font-weight:600;color:var(--ac)}
 .up{color:var(--up)}.dn{color:var(--dn)}
 .note{font-size:12px;color:var(--mu);text-align:center;padding:8px 16px 24px}
+.hero{width:min(580px,94vw);height:auto;display:block;margin-bottom:-30px;-webkit-mask-image:linear-gradient(#000 68%,transparent);mask-image:linear-gradient(#000 68%,transparent)}
+.brand{margin:0;font-size:clamp(38px,9vw,64px);font-weight:800;letter-spacing:1px;line-height:1.1;text-shadow:0 3px 0 rgba(37,99,235,.28),0 10px 26px rgba(37,99,235,.5),0 2px 4px rgba(0,0,0,.25)}
+.tag{margin:0}
 </style></head><body>
 <div id="app"></div>
 <script>
-const LOGO='<span class="logo" onclick="location.hash=\'\'"><svg viewBox="0 0 32 32"><path d="M16 2l12 7v14l-12 7-12-7V9z" fill="#2563eb"/><path d="M11 20v-5M16 22v-9M21 18v-6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>Glace Market</span>';
+const LOGO='<span class="logo" onclick="location.hash=\'\'"><svg viewBox="0 0 32 32"><path d="M16 2l12 7v14l-12 7-12-7V9z" fill="#2563eb"/><path d="M11 20v-5M16 22v-9M21 18v-6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>Glance Market</span>';
 const $=s=>document.querySelector(s),app=$("#app");
 const safe=s=>s.replace(/[^A-Za-z0-9_-]/g,"_");
 const N=(x,d=2)=>x==null?"–":Number(x).toLocaleString("en-IN",{maximumFractionDigits:d});
 const J=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json()};
 let IDX,cur,rng="1Y",tab="q";
+const HERO=`<svg class="hero" viewBox="0 0 600 300" role="img" aria-label="A bull and a bear fighting">
+<g opacity=".16"><line x1="24" y1="187" x2="24" y2="227" stroke="#16a34a" stroke-width="2.5"/><rect x="16" y="197" width="16" height="13" fill="#16a34a"/><line x1="63" y1="152" x2="63" y2="210" stroke="#16a34a" stroke-width="2.5"/><rect x="55" y="167" width="16" height="29" fill="#16a34a"/><line x1="102" y1="122" x2="102" y2="176" stroke="#16a34a" stroke-width="2.5"/><rect x="94" y="137" width="16" height="30" fill="#16a34a"/><line x1="141" y1="122" x2="141" y2="146" stroke="#16a34a" stroke-width="2.5"/><rect x="133" y="131" width="16" height="6" fill="#16a34a"/><line x1="180" y1="104" x2="180" y2="141" stroke="#16a34a" stroke-width="2.5"/><rect x="172" y="124" width="16" height="7" fill="#16a34a"/><line x1="219" y1="87" x2="219" y2="145" stroke="#16a34a" stroke-width="2.5"/><rect x="211" y="104" width="16" height="20" fill="#16a34a"/><line x1="258" y1="106" x2="258" y2="145" stroke="#dc2626" stroke-width="2.5"/><rect x="250" y="120" width="16" height="6" fill="#dc2626"/><line x1="297" y1="72" x2="297" y2="135" stroke="#16a34a" stroke-width="2.5"/><rect x="289" y="92" width="16" height="31" fill="#16a34a"/><line x1="336" y1="86" x2="336" y2="132" stroke="#16a34a" stroke-width="2.5"/><rect x="328" y="95" width="16" height="25" fill="#16a34a"/><line x1="375" y1="109" x2="375" y2="154" stroke="#dc2626" stroke-width="2.5"/><rect x="367" y="120" width="16" height="18" fill="#dc2626"/><line x1="414" y1="125" x2="414" y2="161" stroke="#dc2626" stroke-width="2.5"/><rect x="406" y="138" width="16" height="7" fill="#dc2626"/><line x1="453" y1="106" x2="453" y2="156" stroke="#16a34a" stroke-width="2.5"/><rect x="445" y="115" width="16" height="30" fill="#16a34a"/><line x1="492" y1="106" x2="492" y2="142" stroke="#dc2626" stroke-width="2.5"/><rect x="484" y="120" width="16" height="10" fill="#dc2626"/><line x1="531" y1="115" x2="531" y2="145" stroke="#dc2626" stroke-width="2.5"/><rect x="523" y="130" width="16" height="6" fill="#dc2626"/><line x1="570" y1="115" x2="570" y2="161" stroke="#dc2626" stroke-width="2.5"/><rect x="562" y="133" width="16" height="17" fill="#dc2626"/></g>
+<circle cx="300" cy="180" r="92" fill="#fbbf24" opacity=".14"/><circle cx="300" cy="180" r="66" fill="#fbbf24" opacity=".16"/>
+<g><!-- BULL -->
+<path d="M70 214C40 240 22 270 20 300L276 300C268 268 254 246 232 226C180 248 112 246 70 214Z" fill="#14803a"/>
+<path d="M82 150C54 132 30 134 18 146C38 160 62 166 88 166Z" fill="#14803a"/>
+<path d="M60 200C58 148 100 112 158 112L232 138C262 148 288 168 292 192C295 214 276 228 252 226L206 220C178 240 118 244 88 230C68 221 60 212 60 200Z" fill="#16a34a"/>
+<path d="M60 200C58 170 70 140 100 124C86 150 90 190 110 222C88 230 68 221 60 200Z" fill="#000" opacity=".16"/>
+<ellipse cx="268" cy="202" rx="27" ry="23" fill="#bbf7d0" opacity=".6"/>
+<ellipse cx="278" cy="196" rx="4.5" ry="7" fill="#14301f" transform="rotate(-20 278 196)"/>
+<path d="M254 228C264 222 276 222 284 228" stroke="#14301f" stroke-width="3" fill="none" stroke-linecap="round"/>
+<ellipse cx="214" cy="160" rx="9" ry="5.5" fill="#fff"/><circle cx="217" cy="160.5" r="3.4" fill="#111"/>
+<path d="M195 145L230 161" stroke="#14301f" stroke-width="5.5" stroke-linecap="round"/>
+<path d="M148 120C130 84 148 44 206 36C236 32 256 44 262 56C238 52 222 62 214 82C208 98 206 114 196 128Z" fill="#fef3c7" stroke="#a16207" stroke-width="2.2" stroke-linejoin="round"/>
+<path d="M108 124C96 98 104 66 136 52C122 74 124 98 134 122Z" fill="#fde68a" stroke="#a16207" stroke-width="2" stroke-linejoin="round"/>
+</g>
+<g transform="translate(600 0) scale(-1 1)"><!-- BEAR -->
+<path d="M70 214C40 240 22 270 20 300L276 300C268 268 254 246 232 226C180 248 112 246 70 214Z" fill="#b91c1c"/>
+<circle cx="108" cy="136" r="19" fill="#991b1b"/><circle cx="150" cy="116" r="23" fill="#b91c1c"/><circle cx="150" cy="116" r="12" fill="#fecaca"/>
+<path d="M70 196C66 146 112 112 170 114C214 116 250 140 272 168L298 184C312 194 308 214 292 218L236 224C206 244 128 248 98 232C78 222 72 210 70 196Z" fill="#dc2626"/>
+<path d="M70 196C66 170 76 142 104 126C90 152 94 192 114 224C92 230 74 220 70 196Z" fill="#000" opacity=".16"/>
+<ellipse cx="266" cy="198" rx="36" ry="26" fill="#fecaca" opacity=".7"/>
+<ellipse cx="299" cy="186" rx="11" ry="8" fill="#3b0a0a"/>
+<path d="M248 214C264 222 284 220 296 212" stroke="#3b0a0a" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M262 217L268 229L274 218M280 215L285 225L290 213" fill="#fff" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+<ellipse cx="212" cy="160" rx="9" ry="5.5" fill="#fff"/><circle cx="215" cy="160.5" r="3.4" fill="#111"/>
+<path d="M194 146L230 162" stroke="#3b0a0a" stroke-width="5.5" stroke-linecap="round"/>
+<g transform="rotate(-18 232 262)"><ellipse cx="232" cy="262" rx="26" ry="22" fill="#b91c1c"/><path d="M246 244L260 226L254 248M236 240L246 220L244 244M224 242L228 222L234 244" fill="#fff" stroke="#e5e7eb" stroke-width="1.2" stroke-linejoin="round"/></g>
+</g>
+<polygon points="344.0,180.0 318.4,184.9 338.1,202.0 313.4,193.4 322.0,218.1 304.9,198.4 300.0,224.0 295.1,198.4 278.0,218.1 286.6,193.4 261.9,202.0 281.6,184.9 256.0,180.0 281.6,175.1 261.9,158.0 286.6,166.6 278.0,141.9 295.1,161.6 300.0,136.0 304.9,161.6 322.0,141.9 313.4,166.6 338.1,158.0 318.4,175.1" fill="#fbbf24" stroke="#f97316" stroke-width="2.5" stroke-linejoin="round"/>
+<polygon points="326.0,180.0 310.6,182.8 322.5,193.0 307.8,187.8 313.0,202.5 302.8,190.6 300.0,206.0 297.2,190.6 287.0,202.5 292.2,187.8 277.5,193.0 289.4,182.8 274.0,180.0 289.4,177.2 277.5,167.0 292.2,172.2 287.0,157.5 297.2,169.4 300.0,154.0 302.8,169.4 313.0,157.5 307.8,172.2 322.5,167.0 310.6,177.2" fill="#fff7d6"/>
+</svg>`;
 const SEARCH='<div class="sw"><input id="q" placeholder="Search company or symbol (e.g. TCS, Reliance)" autocomplete="off"><div id="sug"></div></div>';
 const head=()=>`<header>${LOGO}${SEARCH}<a class="btn o" href="#ipo">Live IPOs</a></header>`;
 const note=()=>`<div class="note">Data via Yahoo Finance &amp; NSE free sources · updated ${IDX.u}. Not investment advice.</div>`;
@@ -66,7 +101,7 @@ function bindSearch(){const q=$("#q"),sg=$("#sug");if(!q)return;let hit=[],ix=0;
   hit=v?IDX.s.filter(x=>x[0].toLowerCase().includes(v)||x[1].toLowerCase().includes(v)).sort((a,b)=>(b[0].toLowerCase().startsWith(v)||b[1].toLowerCase().startsWith(v))-(a[0].toLowerCase().startsWith(v)||a[1].toLowerCase().startsWith(v))).slice(0,8):[];ix=0;paint()};
  q.onkeydown=e=>{if(e.key=="Enter"&&hit[ix])go(hit[ix][0]);if(e.key=="ArrowDown"||e.key=="ArrowUp"){e.preventDefault();ix=(ix+(e.key=="ArrowDown"?1:-1)+hit.length)%hit.length;paint()}};
  document.addEventListener("click",e=>{if(!e.target.closest(".sw"))sg.style.display="none"})}
-function home(){app.innerHTML=`<div class="home">${LOGO}<p class="mu" style="margin:0">Search any listed company</p>${SEARCH}<a class="btn" href="#ipo">📢 Live IPOs &amp; Premium (GMP)</a></div>${note()}`;bindSearch();$("#q").focus()}
+function home(){app.innerHTML=`<div class="home">${HERO}<h1 class="brand">Glance Market</h1><p class="mu tag">Search any listed company</p>${SEARCH}<a class="btn" href="#ipo">📢 Live IPOs &amp; Premium (GMP)</a></div>${note()}`;bindSearch();$("#q").focus()}
 async function ipoView(){app.innerHTML=head()+'<main><div class="card"><h2>Live IPOs &amp; Grey Market Premium</h2><div id="ib" class="mu">Loading…</div></div></main>';bindSearch();
  let d;try{d=await J("data/ipo.json")}catch(e){$("#ib").textContent="IPO data not available yet.";return}
  if(!d.items.length){$("#ib").innerHTML="No live IPOs found right now. (Updated "+d.u+")";return}
