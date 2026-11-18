@@ -1,5 +1,3 @@
-Glace Market
-
 A free stock research website for NSE-listed companies. Search a company and see its key ratios, price chart, peers, financial statements and shareholding, with a link out to Screener.in for more detail.
 
 Live site: https://vaibhav15samsukha-jpg.github.io/Glance-Market/
@@ -47,7 +45,7 @@ LIMIT=10 python scripts/update.py      # builds ./site with 10 companies for a q
 
 Set SCOPE=all to cover every NSE-listed company (slow), or leave the default nifty500.
 
-To deploy: fork the repo, go to Settings, then Pages, set Source to GitHub Actions, and run the "Update Glace Market" workflow once from the Actions tab.
+To deploy: fork the repo, go to Settings, then Pages, set Source to GitHub Actions, and run the "Update Glance Market" workflow once from the Actions tab.
 
 Project structure
 web/index.html               the website
@@ -57,11 +55,3 @@ config/gmp.json              manual IPO premium entries
 About
 
 Built by Vaibhav Samsukha, CA Finalist, as a hands-on project in financial data and equity research. The code was developed with AI assistance (Claude); I designed the features and data coverage, set up the deployment, tested the output and understand how each part works.
-
-Content
-
-PDF
-
-repo click Add file
-
-You use it for real analysis. An equity research report on one company, using the site’s numbers, shows the skill the role actually needs. The site becomes a tool for it, not the whole story.
